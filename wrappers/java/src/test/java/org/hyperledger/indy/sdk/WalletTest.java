@@ -3,8 +3,8 @@ package org.hyperledger.indy.sdk;
 import java.io.File;
 
 import org.hyperledger.indy.sdk.LibSovrin;
-import org.hyperledger.indy.sdk.pool.Pool;
-import org.hyperledger.indy.sdk.pool.PoolJSONParameters.OpenPoolLedgerJSONParameter;
+import org.hyperledger.indy.sdk.ledger.Ledger;
+import org.hyperledger.indy.sdk.ledger.PoolJSONParameters.OpenPoolLedgerJSONParameter;
 import org.hyperledger.indy.sdk.wallet.Wallet;
 import org.hyperledger.indy.sdk.wallet.WalletResults.CloseWalletResult;
 import org.hyperledger.indy.sdk.wallet.WalletResults.CreateWalletResult;
@@ -16,7 +16,7 @@ import junit.framework.TestCase;
 
 public class WalletTest extends TestCase {
 
-	private Pool pool;
+	private Ledger ledger;
 	
 	@Override
 	protected void setUp() throws Exception {
@@ -24,13 +24,13 @@ public class WalletTest extends TestCase {
 		if (! LibSovrin.isInitialized()) LibSovrin.init(new File("./lib/libsovrin.so"));
 
 		OpenPoolLedgerJSONParameter openPoolLedgerOptions = new OpenPoolLedgerJSONParameter(null, null, null);
-		this.pool = Pool.openPoolLedger("myconfig", openPoolLedgerOptions).get().getPool();
+		this.ledger = Ledger.openPoolLedger("myconfig", openPoolLedgerOptions).get().getLedger();
 	}
 
 	@Override
 	protected void tearDown() throws Exception {
 
-		this.pool.closePoolLedger();
+		this.ledger.closePoolLedger();
 	}
 
 	public void testWallet() throws Exception {

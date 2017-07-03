@@ -6,7 +6,7 @@ import java.util.concurrent.Future;
 import org.hyperledger.indy.sdk.LibSovrin;
 import org.hyperledger.indy.sdk.SovrinException;
 import org.hyperledger.indy.sdk.SovrinJava;
-import org.hyperledger.indy.sdk.pool.Pool;
+import org.hyperledger.indy.sdk.ledger.Ledger;
 import org.hyperledger.indy.sdk.signus.SignusJSONParameters.CreateAndStoreMyDidJSONParameter;
 import org.hyperledger.indy.sdk.signus.SignusResults.CreateAndStoreMyDidResult;
 import org.hyperledger.indy.sdk.signus.SignusResults.DecryptResult;
@@ -162,7 +162,7 @@ public class Signus extends SovrinJava.API {
 
 	public static Future<VerifySignatureResult> verifySignature(
 			Wallet wallet,
-			Pool pool,
+			Ledger ledger,
 			String did,
 			String signedMsg) throws SovrinException {
 
@@ -181,7 +181,7 @@ public class Signus extends SovrinJava.API {
 		};
 
 		int walletHandle = wallet.getWalletHandle();
-		int poolHandle = pool.getPoolHandle();
+		int poolHandle = ledger.getPoolHandle();
 
 		int result = LibSovrin.api.sovrin_verify_signature(
 				FIXED_COMMAND_HANDLE, 

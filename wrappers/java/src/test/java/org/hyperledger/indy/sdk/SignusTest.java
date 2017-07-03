@@ -4,8 +4,8 @@ import java.io.File;
 import java.util.concurrent.Future;
 
 import org.hyperledger.indy.sdk.LibSovrin;
-import org.hyperledger.indy.sdk.pool.Pool;
-import org.hyperledger.indy.sdk.pool.PoolJSONParameters.OpenPoolLedgerJSONParameter;
+import org.hyperledger.indy.sdk.ledger.Ledger;
+import org.hyperledger.indy.sdk.ledger.PoolJSONParameters.OpenPoolLedgerJSONParameter;
 import org.hyperledger.indy.sdk.signus.Signus;
 import org.hyperledger.indy.sdk.signus.SignusResults.CreateAndStoreMyDidResult;
 import org.hyperledger.indy.sdk.signus.SignusResults.ReplaceKeysResult;
@@ -16,7 +16,7 @@ import junit.framework.TestCase;
 
 public class SignusTest extends TestCase {
 
-	private Pool pool;
+	private Ledger ledger;
 	private Wallet wallet;
 	
 	@Override
@@ -25,7 +25,7 @@ public class SignusTest extends TestCase {
 		if (! LibSovrin.isInitialized()) LibSovrin.init(new File("./lib/libsovrin.so"));
 
 		OpenPoolLedgerJSONParameter openPoolLedgerOptions = new OpenPoolLedgerJSONParameter(null, null, null);
-		this.pool = Pool.openPoolLedger("myconfig", openPoolLedgerOptions).get().getPool();
+		this.ledger = Ledger.openPoolLedger("myconfig", openPoolLedgerOptions).get().getLedger();
 		this.wallet = Wallet.openWallet("mywallet", null, null).get().getWallet();
 	}
 
@@ -33,7 +33,7 @@ public class SignusTest extends TestCase {
 	protected void tearDown() throws Exception {
 
 		this.wallet.closeWallet();
-		this.pool.closePoolLedger();
+		this.ledger.closePoolLedger();
 		Wallet.deleteWallet("mywallet", null);
 	}
 

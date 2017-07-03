@@ -13,7 +13,7 @@ import org.hyperledger.indy.sdk.agent.AgentResults.AgentConnectResult;
 import org.hyperledger.indy.sdk.agent.AgentResults.AgentListenResult;
 import org.hyperledger.indy.sdk.agent.AgentResults.AgentRemoveIdentityResult;
 import org.hyperledger.indy.sdk.agent.AgentResults.AgentSendResult;
-import org.hyperledger.indy.sdk.pool.Pool;
+import org.hyperledger.indy.sdk.ledger.Ledger;
 import org.hyperledger.indy.sdk.wallet.Wallet;
 
 import com.sun.jna.Callback;
@@ -32,7 +32,7 @@ public class Agent extends SovrinJava.API {
 	 */
 
 	public static Future<AgentConnectResult> agentConnect(
-			Pool pool,
+			Ledger ledger,
 			Wallet wallet,
 			String senderDid,
 			String receiverDid,
@@ -54,7 +54,7 @@ public class Agent extends SovrinJava.API {
 			}
 		};
 
-		int poolHandle = pool.getPoolHandle();
+		int poolHandle = ledger.getPoolHandle();
 		int walletHandle = wallet.getWalletHandle();
 
 		int result = LibSovrin.api.sovrin_agent_connect(
@@ -106,7 +106,7 @@ public class Agent extends SovrinJava.API {
 
 	public static Future<AgentAddIdentityResult> agentAddIdentity(
 			Agent.Listener listener,
-			Pool pool,
+			Ledger ledger,
 			Wallet wallet,
 			String did,
 			Callback connectionCb,
@@ -127,7 +127,7 @@ public class Agent extends SovrinJava.API {
 		};
 
 		int listenerHandle = listener.getListenerHandle();
-		int poolHandle = pool.getPoolHandle();
+		int poolHandle = ledger.getPoolHandle();
 		int walletHandle = wallet.getWalletHandle();
 
 		int result = LibSovrin.api.sovrin_agent_add_identity(
@@ -311,9 +311,9 @@ public class Agent extends SovrinJava.API {
 			return this.listenerHandle;
 		}
 
-		public Future<AgentAddIdentityResult> agentAddIdentity(Pool pool, Wallet wallet, String did, Callback connectionCb, Callback messageCb) throws SovrinException {
+		public Future<AgentAddIdentityResult> agentAddIdentity(Ledger ledger, Wallet wallet, String did, Callback connectionCb, Callback messageCb) throws SovrinException {
 
-			return Agent.agentAddIdentity(this, pool, wallet, did, connectionCb, messageCb);
+			return Agent.agentAddIdentity(this, ledger, wallet, did, connectionCb, messageCb);
 		}
 
 		public Future<AgentRemoveIdentityResult> agentRemoveIdentity(Wallet wallet, String did, Callback connectionCb, Callback messageCb) throws SovrinException {
