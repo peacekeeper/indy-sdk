@@ -24,7 +24,7 @@ public class WalletTest extends TestCase {
 		if (! LibSovrin.isInitialized()) LibSovrin.init(new File("./lib/libsovrin.so"));
 
 		OpenPoolLedgerJSONParameter openPoolLedgerOptions = new OpenPoolLedgerJSONParameter(null, null, null);
-		this.ledger = Ledger.openPoolLedger("myconfig", openPoolLedgerOptions).get().getLedger();
+		this.ledger = Ledger.openPoolLedgerAsync("myconfig", openPoolLedgerOptions).get().getLedger();
 	}
 
 	@Override
@@ -37,17 +37,17 @@ public class WalletTest extends TestCase {
 
 		Wallet wallet;
 		
-		CreateWalletResult result1 = Wallet.create("default", "mywallet", null, null, null).get();
+		CreateWalletResult result1 = Wallet.createAsync("default", "mywallet", null, null, null).get();
 		Assert.assertNotNull(result1);
 
-		OpenWalletResult result2 = Wallet.open("mywallet", null, null).get();
+		OpenWalletResult result2 = Wallet.openAsync("mywallet", null, null).get();
 		Assert.assertNotNull(result2);
 		wallet = result2.getWallet();
 
-		CloseWalletResult result3 = wallet.closeWallet().get();
+		CloseWalletResult result3 = wallet.closeAsync().get();
 		Assert.assertNotNull(result3);
 
-		DeleteWalletResult result4 = Wallet.delete("mywallet", null).get();
+		DeleteWalletResult result4 = Wallet.deleteAsync("mywallet", null).get();
 		Assert.assertNotNull(result4);
 	}
 }

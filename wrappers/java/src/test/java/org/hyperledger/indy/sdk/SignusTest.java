@@ -24,16 +24,16 @@ public class SignusTest extends TestCase {
 		if (! LibSovrin.isInitialized()) LibSovrin.init(new File("./lib/libsovrin.so"));
 
 		OpenPoolLedgerJSONParameter openPoolLedgerOptions = new OpenPoolLedgerJSONParameter(null, null, null);
-		this.ledger = Ledger.openPoolLedger("myconfig", openPoolLedgerOptions).get().getLedger();
-		this.wallet = Wallet.open("mywallet", null, null).get().getWallet();
+		this.ledger = Ledger.openPoolLedgerAsync("myconfig", openPoolLedgerOptions).get().getLedger();
+		this.wallet = Wallet.openAsync("mywallet", null, null).get().getWallet();
 	}
 
 	@Override
 	protected void tearDown() throws Exception {
 
-		this.wallet.closeWallet();
+		this.wallet.closeAsync();
 		this.ledger.close();
-		Wallet.delete("mywallet", null);
+		Wallet.deleteAsync("mywallet", null);
 	}
 
 	public void testSignus() throws Exception {

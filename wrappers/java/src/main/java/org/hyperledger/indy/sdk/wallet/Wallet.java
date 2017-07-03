@@ -1,6 +1,7 @@
 package org.hyperledger.indy.sdk.wallet;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import org.hyperledger.indy.sdk.LibSovrin;
@@ -54,7 +55,7 @@ public class Wallet extends SovrinJava.API {
 	 * public Future<...> registerWalletType(
 				...) throws SovrinException;*/
 
-	public static Future<CreateWalletResult> create(
+	public static Future<CreateWalletResult> createAsync(
 			String poolName,
 			String name,
 			String xtype,
@@ -88,8 +89,17 @@ public class Wallet extends SovrinJava.API {
 
 		return future;
 	}
+	
+	public void create(
+			String poolName,
+			String name,
+			String xtype,
+			String config,
+			String credentials) throws InterruptedException, ExecutionException, SovrinException {
+		createAsync(poolName, name, xtype, config, credentials).get();
+	}
 
-	public static Future<OpenWalletResult> open(
+	public static Future<OpenWalletResult> openAsync(
 			String name,
 			String runtimeConfig,
 			String credentials) throws SovrinException {
@@ -121,6 +131,14 @@ public class Wallet extends SovrinJava.API {
 
 		return future;
 	}
+	
+	public Wallet open(
+			String name,
+			String runtimeConfig,
+			String credentials) throws InterruptedException, ExecutionException, SovrinException{
+		OpenWalletResult result = openAsync(name, runtimeConfig, credentials).get();
+		return result.getWallet();
+	}
 
 	private static Future<CloseWalletResult> close(
 			Wallet wallet) throws SovrinException {
@@ -151,7 +169,7 @@ public class Wallet extends SovrinJava.API {
 		return future;
 	}
 
-	public static Future<DeleteWalletResult> delete(
+	public static Future<DeleteWalletResult> deleteAsync(
 			String name,
 			String credentials) throws SovrinException {
 
@@ -178,6 +196,12 @@ public class Wallet extends SovrinJava.API {
 		checkResult(result);
 
 		return future;
+	}
+	
+	public void delete(
+			String name,
+			String credentials) throws InterruptedException, ExecutionException, SovrinException{
+		deleteAsync(name, credentials).get();
 	}
 
 	private static Future<WalletSetSeqNoForValueResult> setSeqNoForValue(
@@ -656,10 +680,14 @@ public class Wallet extends SovrinJava.API {
 	 * INSTANCE METHODS
 	 */
 
-	public Future<CloseWalletResult> closeWallet(
+	public Future<CloseWalletResult> closeAsync(
 			) throws SovrinException {
 
 		return close(this);
+	}
+	
+	public void close() throws InterruptedException, ExecutionException, SovrinException{
+		closeAsync().get();
 	}
 
 	public Future<WalletSetSeqNoForValueResult> setSeqNoForValue(

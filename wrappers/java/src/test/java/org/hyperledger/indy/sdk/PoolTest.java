@@ -32,7 +32,7 @@ public class PoolTest extends TestCase {
 		Assert.assertNotNull(result1);*/
 
 		OpenPoolLedgerJSONParameter config2 = new OpenPoolLedgerJSONParameter(null, null, null);
-		Future<OpenPoolLedgerResult> future2 = Ledger.openPoolLedger("myconfig", config2);
+		Future<OpenPoolLedgerResult> future2 = Ledger.openPoolLedgerAsync("myconfig", config2);
 		OpenPoolLedgerResult result2 = future2.get();
 		Assert.assertNotNull(result2);
 	}

@@ -21,7 +21,7 @@ public class LedgerTest extends TestCase {
 		if (! LibSovrin.isInitialized()) LibSovrin.init(new File("./lib/libsovrin.so"));
 
 		OpenPoolLedgerJSONParameter openPoolLedgerOptions = new OpenPoolLedgerJSONParameter(null, null, null);
-		this.ledger = Ledger.openPoolLedger("myconfig", openPoolLedgerOptions).get().getLedger();
+		this.ledger = Ledger.openPoolLedgerAsync("myconfig", openPoolLedgerOptions).get().getLedger();
 	}
 
 	@Override
@@ -32,7 +32,7 @@ public class LedgerTest extends TestCase {
 
 	public void testLedger() throws Exception {
 
-		BuildGetDdoRequestResult result1 = Ledger.buildGetDdoRequest("did:sov:21tDAKCERh95uGgKbJNHYp", "did:sov:1yvXbmgPoUm4dl66D7KhyD", "{}").get();
+		BuildGetDdoRequestResult result1 = Ledger.buildGetDdoRequestAsync("did:sov:21tDAKCERh95uGgKbJNHYp", "did:sov:1yvXbmgPoUm4dl66D7KhyD", "{}").get();
 		Assert.assertNotNull(result1);
 		String requestJson1 = result1.getRequestJson();
 		Assert.assertNotNull(requestJson1);
