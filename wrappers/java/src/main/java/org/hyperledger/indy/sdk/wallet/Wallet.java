@@ -7,6 +7,12 @@ import org.hyperledger.indy.sdk.LibSovrin;
 import org.hyperledger.indy.sdk.SovrinException;
 import org.hyperledger.indy.sdk.SovrinJava;
 import org.hyperledger.indy.sdk.ledger.Ledger;
+import org.hyperledger.indy.sdk.wallet.AnoncredsResults.IssuerCreateAndStoreClaimDefResult;
+import org.hyperledger.indy.sdk.wallet.AnoncredsResults.IssuerCreateAndStoreRevocRegResult;
+import org.hyperledger.indy.sdk.wallet.AnoncredsResults.IssuerCreateClaimResult;
+import org.hyperledger.indy.sdk.wallet.AnoncredsResults.IssuerRevokeClaimResult;
+import org.hyperledger.indy.sdk.wallet.AnoncredsResults.ProverGetClaimOffersResult;
+import org.hyperledger.indy.sdk.wallet.AnoncredsResults.ProverStoreClaimOfferResult;
 import org.hyperledger.indy.sdk.wallet.SignusJSONParameters.CreateAndStoreMyDidJSONParameter;
 import org.hyperledger.indy.sdk.wallet.SignusResults.CreateAndStoreMyDidResult;
 import org.hyperledger.indy.sdk.wallet.SignusResults.DecryptResult;
@@ -439,6 +445,212 @@ public class Wallet extends SovrinJava.API {
 
 		return future;
 	}
+	
+	/*
+	 * anoncreds.rs API STATIC METHODS
+	 */
+
+	private static Future<IssuerCreateAndStoreClaimDefResult> issuerCreateAndStoreClaimDef(
+			Wallet wallet,
+			String schemaJson, 
+			String signatureType, 
+			boolean createNonRevoc) throws SovrinException {
+
+		final CompletableFuture<IssuerCreateAndStoreClaimDefResult> future = new CompletableFuture<> ();
+
+		Callback cb = new Callback() {
+
+			@SuppressWarnings("unused")
+			public void callback(int xcommand_handle, int err, String claim_def_json, String claim_def_uuid) {
+
+				if (! checkCallback(future, xcommand_handle, err)) return;
+
+				IssuerCreateAndStoreClaimDefResult result = new IssuerCreateAndStoreClaimDefResult(claim_def_json, claim_def_uuid);
+				future.complete(result);
+			}
+		};
+
+		int walletHandle = wallet.getWalletHandle();
+
+		int result = LibSovrin.api.sovrin_issuer_create_and_store_claim_def(
+				FIXED_COMMAND_HANDLE, 
+				walletHandle, 
+				schemaJson,
+				signatureType,
+				createNonRevoc,
+				cb);
+
+		checkResult(result);
+
+		return future;
+	}
+
+	private static Future<IssuerCreateAndStoreRevocRegResult> issuerCreateAndStoreRevocReg(
+			Wallet wallet,
+			int claimDefSeqNo, 
+			int maxClaimNum) throws SovrinException {
+
+		final CompletableFuture<IssuerCreateAndStoreRevocRegResult> future = new CompletableFuture<> ();
+
+		Callback cb = new Callback() {
+
+			@SuppressWarnings("unused")
+			public void callback(int xcommand_handle, int err, String revoc_reg_json, String revoc_reg_uuid) {
+
+				if (! checkCallback(future, xcommand_handle, err)) return;
+
+				IssuerCreateAndStoreRevocRegResult result = new IssuerCreateAndStoreRevocRegResult(revoc_reg_json, revoc_reg_uuid);
+				future.complete(result);
+			}
+		};
+
+		int walletHandle = wallet.getWalletHandle();
+
+		int result = LibSovrin.api.sovrin_issuer_create_and_store_revoc_reg(
+				FIXED_COMMAND_HANDLE, 
+				walletHandle, 
+				claimDefSeqNo,
+				maxClaimNum,
+				cb);
+
+		checkResult(result);
+
+		return future;
+	}
+
+	private static Future<IssuerCreateClaimResult> issuerCreateClaim(
+			Wallet wallet,
+			String claimReqJson, 
+			String claimJson,
+			int revocRegSeqNo,
+			int userRevocIndex) throws SovrinException {
+
+		final CompletableFuture<IssuerCreateClaimResult> future = new CompletableFuture<> ();
+
+		Callback cb = new Callback() {
+
+			@SuppressWarnings("unused")
+			public void callback(int xcommand_handle, int err, String revoc_reg_update_json, String xclaim_json) {
+
+				if (! checkCallback(future, xcommand_handle, err)) return;
+
+				IssuerCreateClaimResult result = new IssuerCreateClaimResult(revoc_reg_update_json, xclaim_json);
+				future.complete(result);
+			}
+		};
+
+		int walletHandle = wallet.getWalletHandle();
+
+		int result = LibSovrin.api.sovrin_issuer_create_claim(
+				FIXED_COMMAND_HANDLE, 
+				walletHandle, 
+				claimReqJson,
+				claimJson,
+				revocRegSeqNo,
+				userRevocIndex,
+				cb);
+
+		checkResult(result);
+
+		return future;
+	}
+
+	private static Future<IssuerRevokeClaimResult> issuerRevokeClaim(
+			Wallet wallet,
+			int claimDefSeqNo, 
+			int revocRegSeqNo, 
+			int userRevocIndex) throws SovrinException {
+
+		final CompletableFuture<IssuerRevokeClaimResult> future = new CompletableFuture<> ();
+
+		Callback cb = new Callback() {
+
+			@SuppressWarnings("unused")
+			public void callback(int xcommand_handle, int err, String revoc_reg_update_json) {
+
+				if (! checkCallback(future, xcommand_handle, err)) return;
+
+				IssuerRevokeClaimResult result = new IssuerRevokeClaimResult(revoc_reg_update_json);
+				future.complete(result);
+			}
+		};
+
+		int walletHandle = wallet.getWalletHandle();
+
+		int result = LibSovrin.api.sovrin_issuer_revoke_claim(
+				FIXED_COMMAND_HANDLE, 
+				walletHandle, 
+				claimDefSeqNo,
+				revocRegSeqNo,
+				userRevocIndex,
+				cb);
+
+		checkResult(result);
+
+		return future;
+	}
+
+	private static Future<ProverStoreClaimOfferResult> proverStoreClaimOffer(
+			Wallet wallet,
+			String claimOfferJson) throws SovrinException {
+
+		final CompletableFuture<ProverStoreClaimOfferResult> future = new CompletableFuture<> ();
+
+		Callback cb = new Callback() {
+
+			@SuppressWarnings("unused")
+			public void callback(int xcommand_handle, int err) {
+
+				if (! checkCallback(future, xcommand_handle, err)) return;
+
+				ProverStoreClaimOfferResult result = new ProverStoreClaimOfferResult();
+				future.complete(result);
+			}
+		};
+
+		int walletHandle = wallet.getWalletHandle();
+
+		int result = LibSovrin.api.sovrin_prover_store_claim_offer(
+				FIXED_COMMAND_HANDLE, 
+				walletHandle, 
+				claimOfferJson,
+				cb);
+
+		checkResult(result);
+
+		return future;
+	}
+
+	private static Future<ProverGetClaimOffersResult> proverGetClaimOffers(
+			Wallet wallet,
+			String filterJson) throws SovrinException {
+
+		final CompletableFuture<ProverGetClaimOffersResult> future = new CompletableFuture<> ();
+
+		Callback cb = new Callback() {
+
+			@SuppressWarnings("unused")
+			public void callback(int xcommand_handle, int err, String claim_offers_json) {
+
+				if (! checkCallback(future, xcommand_handle, err)) return;
+
+				ProverGetClaimOffersResult result = new ProverGetClaimOffersResult(claim_offers_json);
+				future.complete(result);
+			}
+		};
+
+		int walletHandle = wallet.getWalletHandle();
+
+		int result = LibSovrin.api.sovrin_prover_get_claim_offers(
+				FIXED_COMMAND_HANDLE, 
+				walletHandle, 
+				filterJson,
+				cb);
+
+		checkResult(result);
+
+		return future;
+	}
 
 	/*
 	 * INSTANCE METHODS
@@ -498,5 +710,44 @@ public class Wallet extends SovrinJava.API {
 			String encryptedMsg) throws SovrinException{
 		return decrypt(this, did, encryptedMsg);
 	}
+	
+	public Future<IssuerCreateAndStoreClaimDefResult> issuerCreateAndStoreClaimDef(
+			String schemaJson, 
+			String signatureType, 
+			boolean createNonRevoc) throws SovrinException{
+		return issuerCreateAndStoreClaimDef(this, schemaJson, signatureType, createNonRevoc);
+	}
+	
+	public Future<IssuerCreateAndStoreRevocRegResult> issuerCreateAndStoreRevocReg(
+			int claimDefSeqNo, 
+			int maxClaimNum) throws SovrinException{
+		return issuerCreateAndStoreRevocReg(this, claimDefSeqNo, maxClaimNum);
+	}
+	
+	public Future<IssuerCreateClaimResult> issuerCreateClaim(
+			String claimReqJson, 
+			String claimJson,
+			int revocRegSeqNo,
+			int userRevocIndex) throws SovrinException{
+		return issuerCreateClaim(this, claimReqJson, claimJson, revocRegSeqNo, userRevocIndex);
+	}
+	
+	public Future<IssuerRevokeClaimResult> issuerRevokeClaim(
+			int claimDefSeqNo, 
+			int revocRegSeqNo, 
+			int userRevocIndex) throws SovrinException{
+		return issuerRevokeClaim(this, claimDefSeqNo, revocRegSeqNo, userRevocIndex);
+	}
+	
+	public Future<ProverStoreClaimOfferResult> proverStoreClaimOffer(
+			String claimOfferJson) throws SovrinException {
+		return proverStoreClaimOffer(this, claimOfferJson);
+	}
+	
+	public Future<ProverGetClaimOffersResult> proverGetClaimOffers(
+			String filterJson) throws SovrinException {
+		return proverGetClaimOffers(this, filterJson);
+	}
+	
 	
 }
