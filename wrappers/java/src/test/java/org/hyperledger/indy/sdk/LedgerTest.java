@@ -27,7 +27,7 @@ public class LedgerTest extends TestCase {
 	@Override
 	protected void tearDown() throws Exception {
 
-		this.ledger.closePoolLedger();
+		this.ledger.close();
 	}
 
 	public void testLedger() throws Exception {

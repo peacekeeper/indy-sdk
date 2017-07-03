@@ -25,15 +25,15 @@ public class SignusTest extends TestCase {
 
 		OpenPoolLedgerJSONParameter openPoolLedgerOptions = new OpenPoolLedgerJSONParameter(null, null, null);
 		this.ledger = Ledger.openPoolLedger("myconfig", openPoolLedgerOptions).get().getLedger();
-		this.wallet = Wallet.openWallet("mywallet", null, null).get().getWallet();
+		this.wallet = Wallet.open("mywallet", null, null).get().getWallet();
 	}
 
 	@Override
 	protected void tearDown() throws Exception {
 
 		this.wallet.closeWallet();
-		this.ledger.closePoolLedger();
-		Wallet.deleteWallet("mywallet", null);
+		this.ledger.close();
+		Wallet.delete("mywallet", null);
 	}
 
 	public void testSignus() throws Exception {

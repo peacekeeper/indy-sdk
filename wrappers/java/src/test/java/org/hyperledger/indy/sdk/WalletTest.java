@@ -30,24 +30,24 @@ public class WalletTest extends TestCase {
 	@Override
 	protected void tearDown() throws Exception {
 
-		this.ledger.closePoolLedger();
+		this.ledger.close();
 	}
 
 	public void testWallet() throws Exception {
 
 		Wallet wallet;
 		
-		CreateWalletResult result1 = Wallet.createWallet("default", "mywallet", null, null, null).get();
+		CreateWalletResult result1 = Wallet.create("default", "mywallet", null, null, null).get();
 		Assert.assertNotNull(result1);
 
-		OpenWalletResult result2 = Wallet.openWallet("mywallet", null, null).get();
+		OpenWalletResult result2 = Wallet.open("mywallet", null, null).get();
 		Assert.assertNotNull(result2);
 		wallet = result2.getWallet();
 
 		CloseWalletResult result3 = wallet.closeWallet().get();
 		Assert.assertNotNull(result3);
 
-		DeleteWalletResult result4 = Wallet.deleteWallet("mywallet", null).get();
+		DeleteWalletResult result4 = Wallet.delete("mywallet", null).get();
 		Assert.assertNotNull(result4);
 	}
 }

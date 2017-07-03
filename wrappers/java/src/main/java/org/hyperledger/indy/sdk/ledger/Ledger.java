@@ -581,13 +581,13 @@ public class Ledger extends SovrinJava.API {
 	 * INSTANCE METHODS
 	 */
 
-	public Future<RefreshPoolLedgerResult> refreshPoolLedger(
+	public Future<RefreshPoolLedgerResult> refresh(
 			) throws SovrinException {
 
 		return refreshPoolLedger(this);
 	}
 
-	public Future<ClosePoolLedgerResult> closePoolLedger(
+	public Future<ClosePoolLedgerResult> close(
 			) throws SovrinException {
 
 		return closePoolLedger(this);

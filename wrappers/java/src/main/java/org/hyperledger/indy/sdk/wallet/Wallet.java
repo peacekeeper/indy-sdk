@@ -54,7 +54,7 @@ public class Wallet extends SovrinJava.API {
 	 * public Future<...> registerWalletType(
 				...) throws SovrinException;*/
 
-	public static Future<CreateWalletResult> createWallet(
+	public static Future<CreateWalletResult> create(
 			String poolName,
 			String name,
 			String xtype,
@@ -89,7 +89,7 @@ public class Wallet extends SovrinJava.API {
 		return future;
 	}
 
-	public static Future<OpenWalletResult> openWallet(
+	public static Future<OpenWalletResult> open(
 			String name,
 			String runtimeConfig,
 			String credentials) throws SovrinException {
@@ -122,7 +122,7 @@ public class Wallet extends SovrinJava.API {
 		return future;
 	}
 
-	private static Future<CloseWalletResult> closeWallet(
+	private static Future<CloseWalletResult> close(
 			Wallet wallet) throws SovrinException {
 
 		final CompletableFuture<CloseWalletResult> future = new CompletableFuture<> ();
@@ -151,7 +151,7 @@ public class Wallet extends SovrinJava.API {
 		return future;
 	}
 
-	public static Future<DeleteWalletResult> deleteWallet(
+	public static Future<DeleteWalletResult> delete(
 			String name,
 			String credentials) throws SovrinException {
 
@@ -180,7 +180,7 @@ public class Wallet extends SovrinJava.API {
 		return future;
 	}
 
-	private static Future<WalletSetSeqNoForValueResult> walletSetSeqNoForValue(
+	private static Future<WalletSetSeqNoForValueResult> setSeqNoForValue(
 			Wallet wallet, 
 			String walletKey,
 			String configName) throws SovrinException {
@@ -311,7 +311,7 @@ public class Wallet extends SovrinJava.API {
 		return future;
 	}
 
-	private static Future<SignResult> sign(
+	private static Future<SignResult> signMessage(
 			Wallet wallet,
 			String did,
 			String msg) throws SovrinException {
@@ -344,7 +344,7 @@ public class Wallet extends SovrinJava.API {
 		return future;
 	}
 
-	private static Future<VerifySignatureResult> verifySignature(
+	private static Future<VerifySignatureResult> verifyMessageSignature(
 			Wallet wallet,
 			Ledger ledger,
 			String did,
@@ -380,7 +380,7 @@ public class Wallet extends SovrinJava.API {
 		return future;
 	}
 
-	private static Future<EncryptResult> encrypt(
+	private static Future<EncryptResult> encryptMessage(
 			Wallet wallet,
 			String did,
 			String msg) throws SovrinException {
@@ -413,7 +413,7 @@ public class Wallet extends SovrinJava.API {
 		return future;
 	}
 
-	private static Future<DecryptResult> decrypt(
+	private static Future<DecryptResult> decryptMessage(
 			Wallet wallet,
 			String did,
 			String encryptedMsg) throws SovrinException {
@@ -659,14 +659,14 @@ public class Wallet extends SovrinJava.API {
 	public Future<CloseWalletResult> closeWallet(
 			) throws SovrinException {
 
-		return closeWallet(this);
+		return close(this);
 	}
 
-	public Future<WalletSetSeqNoForValueResult> walletSetSeqNoForValue(
+	public Future<WalletSetSeqNoForValueResult> setSeqNoForValue(
 			String walletKey,
 			String configName) throws SovrinException {
 
-		return walletSetSeqNoForValue(this, walletKey, configName);
+		return setSeqNoForValue(this, walletKey, configName);
 	}
 	
 	public Future<CreateAndStoreMyDidResult> createAndStoreMyDid(
@@ -685,30 +685,30 @@ public class Wallet extends SovrinJava.API {
 		return storeTheirDid(this, identityJson);
 	}
 	
-	public Future<SignResult> sign(
+	public Future<SignResult> signMessage(
 			String did,
 			String msg) throws SovrinException{
-		return sign(this, did, msg);
+		return signMessage(this, did, msg);
 	}
 	
 	//Should a corresponding version of this be available on the Ledger class?
-	public Future<VerifySignatureResult> verifySignature(
+	public Future<VerifySignatureResult> verifyMessageSignature(
 			Ledger ledger,
 			String did,
 			String signedMsg) throws SovrinException{
-		return verifySignature(this, ledger, did, signedMsg);
+		return verifyMessageSignature(this, ledger, did, signedMsg);
 	}
 	
-	public Future<EncryptResult> encrypt(
+	public Future<EncryptResult> encryptMessage(
 			String did,
 			String msg) throws SovrinException{
-		return encrypt(this, did, msg);
+		return encryptMessage(this, did, msg);
 	}
 	
-	public Future<DecryptResult> decrypt(
+	public Future<DecryptResult> decryptMessage(
 			String did,
 			String encryptedMsg) throws SovrinException{
-		return decrypt(this, did, encryptedMsg);
+		return decryptMessage(this, did, encryptedMsg);
 	}
 	
 	public Future<IssuerCreateAndStoreClaimDefResult> issuerCreateAndStoreClaimDef(

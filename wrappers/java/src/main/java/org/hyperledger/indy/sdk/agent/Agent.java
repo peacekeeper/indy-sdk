@@ -31,7 +31,7 @@ public class Agent extends SovrinJava.API {
 	 * STATIC METHODS
 	 */
 
-	public static Future<AgentConnectResult> agentConnect(
+	public static Future<AgentConnectResult> createConnection(
 			Ledger ledger,
 			Wallet wallet,
 			String senderDid,
@@ -71,7 +71,7 @@ public class Agent extends SovrinJava.API {
 		return future;
 	}
 
-	public static Future<AgentListenResult> agentListen(
+	public static Future<AgentListenResult> createListener(
 			String endpoint,
 			Callback connectionCb,
 			Callback messageCb) throws SovrinException {
@@ -104,7 +104,7 @@ public class Agent extends SovrinJava.API {
 		return future;
 	}
 
-	public static Future<AgentAddIdentityResult> agentAddIdentity(
+	private static Future<AgentAddIdentityResult> agentAddIdentity(
 			Agent.Listener listener,
 			Ledger ledger,
 			Wallet wallet,
@@ -143,7 +143,7 @@ public class Agent extends SovrinJava.API {
 		return future;
 	}
 
-	public static Future<AgentRemoveIdentityResult> agentRemoveIdentity(
+	private static Future<AgentRemoveIdentityResult> agentRemoveIdentity(
 			Agent.Listener listener,
 			Wallet wallet,
 			String did,
@@ -179,7 +179,7 @@ public class Agent extends SovrinJava.API {
 		return future;
 	}
 
-	public static Future<AgentSendResult> agentSend(
+	private static Future<AgentSendResult> agentSend(
 			Agent.Connection connection,
 			String message) throws SovrinException {
 
@@ -210,7 +210,7 @@ public class Agent extends SovrinJava.API {
 		return future;
 	}
 
-	public static Future<AgentCloseConnectionResult> agentCloseConnection(
+	private static Future<AgentCloseConnectionResult> agentCloseConnection(
 			Agent.Connection connection) throws SovrinException {
 
 		final CompletableFuture<AgentCloseConnectionResult> future = new CompletableFuture<> ();
@@ -239,7 +239,7 @@ public class Agent extends SovrinJava.API {
 		return future;
 	}
 
-	public static Future<AgentCloseListenerResult> agentCloseListener(
+	private static Future<AgentCloseListenerResult> agentCloseListener(
 			Agent.Listener listener) throws SovrinException {
 
 		final CompletableFuture<AgentCloseListenerResult> future = new CompletableFuture<> ();
@@ -286,12 +286,12 @@ public class Agent extends SovrinJava.API {
 			return this.connectionHandle;
 		}
 
-		public Future<AgentSendResult> agentSend(String message) throws SovrinException {
+		public Future<AgentSendResult> sendMessage(String message) throws SovrinException {
 
 			return Agent.agentSend(this, message);
 		}
 
-		public Future<AgentCloseConnectionResult> agentCloseConnection() throws SovrinException {
+		public Future<AgentCloseConnectionResult> close() throws SovrinException {
 
 			return Agent.agentCloseConnection(this);
 		}
@@ -311,17 +311,17 @@ public class Agent extends SovrinJava.API {
 			return this.listenerHandle;
 		}
 
-		public Future<AgentAddIdentityResult> agentAddIdentity(Ledger ledger, Wallet wallet, String did, Callback connectionCb, Callback messageCb) throws SovrinException {
+		public Future<AgentAddIdentityResult> addIdentity(Ledger ledger, Wallet wallet, String did, Callback connectionCb, Callback messageCb) throws SovrinException {
 
 			return Agent.agentAddIdentity(this, ledger, wallet, did, connectionCb, messageCb);
 		}
 
-		public Future<AgentRemoveIdentityResult> agentRemoveIdentity(Wallet wallet, String did, Callback connectionCb, Callback messageCb) throws SovrinException {
+		public Future<AgentRemoveIdentityResult> removeIdentity(Wallet wallet, String did, Callback connectionCb, Callback messageCb) throws SovrinException {
 
 			return Agent.agentRemoveIdentity(this, wallet, did, connectionCb, messageCb);
 		}
 
-		public Future<AgentCloseListenerResult> agentCloseListener() throws SovrinException {
+		public Future<AgentCloseListenerResult> close() throws SovrinException {
 
 			return Agent.agentCloseListener(this);
 		}
