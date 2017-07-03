@@ -1,6 +1,7 @@
 package org.hyperledger.indy.sdk.agent;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import org.hyperledger.indy.sdk.LibSovrin;
@@ -31,7 +32,7 @@ public class Agent extends SovrinJava.API {
 	 * STATIC METHODS
 	 */
 
-	public static Future<AgentConnectResult> createConnection(
+	public static Future<AgentConnectResult> createConnectionAsync(
 			Ledger ledger,
 			Wallet wallet,
 			String senderDid,
@@ -70,8 +71,17 @@ public class Agent extends SovrinJava.API {
 
 		return future;
 	}
+	
+	public Agent.Connection createConnection(Ledger ledger,
+			Wallet wallet,
+			String senderDid,
+			String receiverDid,
+			Callback messageCb) throws InterruptedException, ExecutionException, SovrinException{
+		AgentConnectResult result = createConnectionAsync(ledger, wallet, senderDid, receiverDid, messageCb).get();
+		return result.getConnection();		
+	}
 
-	public static Future<AgentListenResult> createListener(
+	public static Future<AgentListenResult> createListenerAsync(
 			String endpoint,
 			Callback connectionCb,
 			Callback messageCb) throws SovrinException {
@@ -102,6 +112,14 @@ public class Agent extends SovrinJava.API {
 		checkResult(result);
 
 		return future;
+	}
+	
+	public Agent.Listener createListener(
+			String endpoint,
+			Callback connectionCb,
+			Callback messageCb) throws InterruptedException, ExecutionException, SovrinException{
+		AgentListenResult result = createListenerAsync(endpoint, connectionCb, messageCb).get();
+		return result.getListener();
 	}
 
 	private static Future<AgentAddIdentityResult> agentAddIdentity(
@@ -286,14 +304,22 @@ public class Agent extends SovrinJava.API {
 			return this.connectionHandle;
 		}
 
-		public Future<AgentSendResult> sendMessage(String message) throws SovrinException {
+		public Future<AgentSendResult> sendMessageAsync(String message) throws SovrinException {
 
 			return Agent.agentSend(this, message);
 		}
+		
+		public void sendMessage(String message) throws InterruptedException, ExecutionException, SovrinException{
+			sendMessageAsync(message).get();
+		}
 
-		public Future<AgentCloseConnectionResult> close() throws SovrinException {
+		public Future<AgentCloseConnectionResult> closeAsync() throws SovrinException {
 
 			return Agent.agentCloseConnection(this);
+		}
+		
+		public void close() throws InterruptedException, ExecutionException, SovrinException{
+			closeAsync().get();
 		}
 	}
 
@@ -311,19 +337,31 @@ public class Agent extends SovrinJava.API {
 			return this.listenerHandle;
 		}
 
-		public Future<AgentAddIdentityResult> addIdentity(Ledger ledger, Wallet wallet, String did, Callback connectionCb, Callback messageCb) throws SovrinException {
+		public Future<AgentAddIdentityResult> addIdentityAsync(Ledger ledger, Wallet wallet, String did, Callback connectionCb, Callback messageCb) throws SovrinException {
 
 			return Agent.agentAddIdentity(this, ledger, wallet, did, connectionCb, messageCb);
 		}
+		
+		public void addIdentity(Ledger ledger, Wallet wallet, String did, Callback connectionCb, Callback messageCb) throws InterruptedException, ExecutionException, SovrinException{
+			addIdentityAsync(ledger, wallet, did, connectionCb, messageCb).get();
+		}
 
-		public Future<AgentRemoveIdentityResult> removeIdentity(Wallet wallet, String did, Callback connectionCb, Callback messageCb) throws SovrinException {
+		public Future<AgentRemoveIdentityResult> removeIdentityAsync(Wallet wallet, String did, Callback connectionCb, Callback messageCb) throws SovrinException {
 
 			return Agent.agentRemoveIdentity(this, wallet, did, connectionCb, messageCb);
 		}
+		
+		public void removeIdentity(Wallet wallet, String did, Callback connectionCb, Callback messageCb) throws SovrinException, InterruptedException, ExecutionException {
+			removeIdentityAsync(wallet, did, connectionCb, messageCb).get();
+		}
 
-		public Future<AgentCloseListenerResult> close() throws SovrinException {
+		public Future<AgentCloseListenerResult> closeAsync() throws SovrinException {
 
 			return Agent.agentCloseListener(this);
+		}
+		
+		public void close() throws InterruptedException, ExecutionException, SovrinException{
+			closeAsync().get();
 		}
 	}
 }
