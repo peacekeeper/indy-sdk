@@ -4,19 +4,18 @@ import java.io.File;
 import java.util.concurrent.Future;
 
 import org.hyperledger.indy.sdk.LibSovrin;
-import org.hyperledger.indy.sdk.pool.Pool;
-import org.hyperledger.indy.sdk.pool.PoolJSONParameters.OpenPoolLedgerJSONParameter;
-import org.hyperledger.indy.sdk.signus.Signus;
-import org.hyperledger.indy.sdk.signus.SignusResults.CreateAndStoreMyDidResult;
-import org.hyperledger.indy.sdk.signus.SignusResults.ReplaceKeysResult;
+import org.hyperledger.indy.sdk.ledger.Ledger;
+import org.hyperledger.indy.sdk.ledger.PoolJSONParameters.OpenPoolLedgerJSONParameter;
 import org.hyperledger.indy.sdk.wallet.Wallet;
+import org.hyperledger.indy.sdk.wallet.SignusResults.CreateAndStoreMyDidResult;
+import org.hyperledger.indy.sdk.wallet.SignusResults.ReplaceKeysResult;
 import org.junit.Assert;
 
 import junit.framework.TestCase;
 
 public class SignusTest extends TestCase {
 
-	private Pool pool;
+	private Ledger ledger;
 	private Wallet wallet;
 	
 	@Override
@@ -25,21 +24,21 @@ public class SignusTest extends TestCase {
 		if (! LibSovrin.isInitialized()) LibSovrin.init(new File("./lib/libsovrin.so"));
 
 		OpenPoolLedgerJSONParameter openPoolLedgerOptions = new OpenPoolLedgerJSONParameter(null, null, null);
-		this.pool = Pool.openPoolLedger("myconfig", openPoolLedgerOptions).get().getPool();
-		this.wallet = Wallet.openWallet("mywallet", null, null).get().getWallet();
+		this.ledger = Ledger.openPoolLedgerAsync("myconfig", openPoolLedgerOptions).get().getLedger();
+		this.wallet = Wallet.openAsync("mywallet", null, null).get().getWallet();
 	}
 
 	@Override
 	protected void tearDown() throws Exception {
 
-		this.wallet.closeWallet();
-		this.pool.closePoolLedger();
-		Wallet.deleteWallet("mywallet", null);
+		this.wallet.closeAsync();
+		this.ledger.close();
+		Wallet.deleteAsync("mywallet", null);
 	}
 
 	public void testSignus() throws Exception {
 
-		Future<CreateAndStoreMyDidResult> future1 = Signus.createAndStoreMyDid(this.wallet, null);
+		Future<CreateAndStoreMyDidResult> future1 = wallet.createAndStoreMyDid(null);
 		CreateAndStoreMyDidResult result1 = future1.get();
 		Assert.assertNotNull(result1);
 		String did1 = result1.getDid();
@@ -52,7 +51,7 @@ public class SignusTest extends TestCase {
 		System.out.println(verkey1);
 		System.out.println(pk1);
 
-		Future<ReplaceKeysResult> future2 = Signus.replaceKeys(this.wallet, did1, "{}");
+		Future<ReplaceKeysResult> future2 = wallet.replaceKeys(did1, "{}");
 		ReplaceKeysResult result2 = future2.get();
 		Assert.assertNotNull(result2);
 		String verkey2 = result2.getVerkey();

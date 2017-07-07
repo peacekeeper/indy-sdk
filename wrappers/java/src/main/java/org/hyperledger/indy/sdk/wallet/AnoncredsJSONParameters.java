@@ -1,4 +1,4 @@
-package org.hyperledger.indy.sdk.anoncreds;
+package org.hyperledger.indy.sdk.wallet;
 
 /**
  * ledger.rs JSON parameters

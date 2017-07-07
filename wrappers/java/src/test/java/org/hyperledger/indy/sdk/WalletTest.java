@@ -3,8 +3,8 @@ package org.hyperledger.indy.sdk;
 import java.io.File;
 
 import org.hyperledger.indy.sdk.LibSovrin;
-import org.hyperledger.indy.sdk.pool.Pool;
-import org.hyperledger.indy.sdk.pool.PoolJSONParameters.OpenPoolLedgerJSONParameter;
+import org.hyperledger.indy.sdk.ledger.Ledger;
+import org.hyperledger.indy.sdk.ledger.PoolJSONParameters.OpenPoolLedgerJSONParameter;
 import org.hyperledger.indy.sdk.wallet.Wallet;
 import org.hyperledger.indy.sdk.wallet.WalletResults.CloseWalletResult;
 import org.hyperledger.indy.sdk.wallet.WalletResults.CreateWalletResult;
@@ -16,7 +16,7 @@ import junit.framework.TestCase;
 
 public class WalletTest extends TestCase {
 
-	private Pool pool;
+	private Ledger ledger;
 	
 	@Override
 	protected void setUp() throws Exception {
@@ -24,30 +24,30 @@ public class WalletTest extends TestCase {
 		if (! LibSovrin.isInitialized()) LibSovrin.init(new File("./lib/libsovrin.so"));
 
 		OpenPoolLedgerJSONParameter openPoolLedgerOptions = new OpenPoolLedgerJSONParameter(null, null, null);
-		this.pool = Pool.openPoolLedger("myconfig", openPoolLedgerOptions).get().getPool();
+		this.ledger = Ledger.openPoolLedgerAsync("myconfig", openPoolLedgerOptions).get().getLedger();
 	}
 
 	@Override
 	protected void tearDown() throws Exception {
 
-		this.pool.closePoolLedger();
+		this.ledger.close();
 	}
 
 	public void testWallet() throws Exception {
 
 		Wallet wallet;
 		
-		CreateWalletResult result1 = Wallet.createWallet("default", "mywallet", null, null, null).get();
+		CreateWalletResult result1 = Wallet.createAsync("default", "mywallet", null, null, null).get();
 		Assert.assertNotNull(result1);
 
-		OpenWalletResult result2 = Wallet.openWallet("mywallet", null, null).get();
+		OpenWalletResult result2 = Wallet.openAsync("mywallet", null, null).get();
 		Assert.assertNotNull(result2);
 		wallet = result2.getWallet();
 
-		CloseWalletResult result3 = wallet.closeWallet().get();
+		CloseWalletResult result3 = wallet.closeAsync().get();
 		Assert.assertNotNull(result3);
 
-		DeleteWalletResult result4 = Wallet.deleteWallet("mywallet", null).get();
+		DeleteWalletResult result4 = Wallet.deleteAsync("mywallet", null).get();
 		Assert.assertNotNull(result4);
 	}
 }

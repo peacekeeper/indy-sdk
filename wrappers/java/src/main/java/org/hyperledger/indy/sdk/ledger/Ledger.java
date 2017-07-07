@@ -1,6 +1,7 @@
 package org.hyperledger.indy.sdk.ledger;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import org.hyperledger.indy.sdk.LibSovrin;
@@ -18,26 +19,41 @@ import org.hyperledger.indy.sdk.ledger.LedgerResults.BuildNymRequestResult;
 import org.hyperledger.indy.sdk.ledger.LedgerResults.BuildSchemaRequestResult;
 import org.hyperledger.indy.sdk.ledger.LedgerResults.SignAndSubmitRequestResult;
 import org.hyperledger.indy.sdk.ledger.LedgerResults.SubmitRequestResult;
-import org.hyperledger.indy.sdk.pool.Pool;
+import org.hyperledger.indy.sdk.ledger.PoolJSONParameters.CreatePoolLedgerConfigJSONParameter;
+import org.hyperledger.indy.sdk.ledger.PoolJSONParameters.OpenPoolLedgerJSONParameter;
+import org.hyperledger.indy.sdk.ledger.PoolResults.ClosePoolLedgerResult;
+import org.hyperledger.indy.sdk.ledger.PoolResults.CreatePoolLedgerConfigResult;
+import org.hyperledger.indy.sdk.ledger.PoolResults.DeletePoolLedgerConfigResult;
+import org.hyperledger.indy.sdk.ledger.PoolResults.OpenPoolLedgerResult;
+import org.hyperledger.indy.sdk.ledger.PoolResults.RefreshPoolLedgerResult;
 import org.hyperledger.indy.sdk.wallet.Wallet;
 
 import com.sun.jna.Callback;
 
 /**
- * ledger.rs API
+ * 
  */
 public class Ledger extends SovrinJava.API {
+	
+	private final int poolHandle;
 
-	private Ledger() {
+	private Ledger(int poolHandle) {
 
+		this.poolHandle = poolHandle;
 	}
 
+	public int getPoolHandle() {
+
+		return this.poolHandle;
+	}
+
+
 	/*
-	 * STATIC METHODS
+	 * ledger.rs API STATIC METHODS
 	 */
 
-	public static Future<SignAndSubmitRequestResult> signAndSubmitRequest(
-			Pool pool,
+	private static Future<SignAndSubmitRequestResult> signAndSubmitRequest(
+			Ledger ledger,
 			Wallet wallet,
 			String submitterDid,
 			String requestJson) throws SovrinException {
@@ -56,7 +72,7 @@ public class Ledger extends SovrinJava.API {
 			}
 		};
 
-		int poolHandle = pool.getPoolHandle();
+		int poolHandle = ledger.getPoolHandle();
 		int walletHandle = wallet.getWalletHandle();
 
 		int result = LibSovrin.api.sovrin_sign_and_submit_request(
@@ -72,8 +88,8 @@ public class Ledger extends SovrinJava.API {
 		return future;
 	}
 
-	public static Future<SubmitRequestResult> submitRequest(
-			Pool pool,
+	private static Future<SubmitRequestResult> submitRequest(
+			Ledger ledger,
 			String requestJson) throws SovrinException {
 
 		final CompletableFuture<SubmitRequestResult> future = new CompletableFuture<> ();
@@ -90,7 +106,7 @@ public class Ledger extends SovrinJava.API {
 			}
 		};
 
-		int poolHandle = pool.getPoolHandle();
+		int poolHandle = ledger.getPoolHandle();
 
 		int result = LibSovrin.api.sovrin_submit_request(
 				FIXED_COMMAND_HANDLE, 
@@ -102,8 +118,8 @@ public class Ledger extends SovrinJava.API {
 
 		return future;
 	}
-
-	public static Future<BuildGetDdoRequestResult> buildGetDdoRequest(
+	
+	public static Future<BuildGetDdoRequestResult> buildGetDdoRequestAsync(
 			String submitterDid,
 			String targetDid,
 			String requestJson) throws SovrinException {
@@ -132,8 +148,16 @@ public class Ledger extends SovrinJava.API {
 
 		return future;
 	}
+	
+	public String buildGetDdoRequest(
+			String submitterDid,
+			String targetDid,
+			String requestJson) throws InterruptedException, ExecutionException, SovrinException{
+		BuildGetDdoRequestResult result = buildGetDdoRequestAsync(submitterDid, targetDid, requestJson).get();
+		return result.getRequestJson();
+	}
 
-	public static Future<BuildNymRequestResult> buildNymRequest(
+	public static Future<BuildNymRequestResult> buildNymRequestAsync(
 			String submitterDid,
 			String targetDid,
 			String verkey,
@@ -166,6 +190,16 @@ public class Ledger extends SovrinJava.API {
 		checkResult(result);
 
 		return future;
+	}
+	
+	public String buildNymRequest(
+			String submitterDid,
+			String targetDid,
+			String verkey,
+			String alias,
+			String role) throws InterruptedException, ExecutionException, SovrinException {
+		BuildNymRequestResult result = buildNymRequestAsync(submitterDid, targetDid, verkey, alias, role).get();
+		return result.getRequestJson();
 	}
 
 	public static Future<BuildAttribRequestResult> buildAttribRequest(
@@ -410,5 +444,224 @@ public class Ledger extends SovrinJava.API {
 		checkResult(result);
 
 		return future;
+	}
+	
+
+	/*
+	 * pool.rs API STATIC METHODS
+	 */
+
+	public static Future<CreatePoolLedgerConfigResult> createPoolLedgerConfigAsync(
+			String configName,
+			CreatePoolLedgerConfigJSONParameter config) throws SovrinException {
+
+		final CompletableFuture<CreatePoolLedgerConfigResult> future = new CompletableFuture<> ();
+
+		Callback cb = new Callback() {
+
+			@SuppressWarnings("unused")
+			public void callback(int xcommand_handle, int err) {
+
+				if (! checkCallback(future, xcommand_handle, err)) return;
+
+				CreatePoolLedgerConfigResult result = new CreatePoolLedgerConfigResult();
+				future.complete(result);
+			}
+		};
+
+		int result = LibSovrin.api.sovrin_create_pool_ledger_config(
+				FIXED_COMMAND_HANDLE, 
+				configName, 
+				config == null ? null : config.toJson(), 
+				cb);
+
+		checkResult(result);
+
+		return future;
+	}
+	
+	public void  createPoolLedgerConfig(
+			String configName,
+			CreatePoolLedgerConfigJSONParameter config) throws InterruptedException, ExecutionException, SovrinException{
+		createPoolLedgerConfigAsync(configName, config).get();
+	}
+	
+	public static Future<DeletePoolLedgerConfigResult> deletePoolLedgerConfigAsync(
+			String configName) throws SovrinException {
+
+		final CompletableFuture<DeletePoolLedgerConfigResult> future = new CompletableFuture<> ();
+
+		Callback cb = new Callback() {
+
+			@SuppressWarnings("unused")
+			public void callback(int xcommand_handle, int err) {
+
+				if (! checkCallback(future, xcommand_handle, err)) return;
+
+				DeletePoolLedgerConfigResult result = new DeletePoolLedgerConfigResult();
+				future.complete(result);
+			}
+		};
+
+		int result = LibSovrin.api.sovrin_delete_pool_ledger_config(
+				FIXED_COMMAND_HANDLE, 
+				configName, 
+				cb);
+
+		checkResult(result);
+
+		return future;
+	}
+	
+	public void deletePoolLedgerConfig(
+			String configName) throws InterruptedException, ExecutionException, SovrinException {
+		deletePoolLedgerConfigAsync(configName).get();
+	}
+
+	public static Future<OpenPoolLedgerResult> openPoolLedgerAsync(
+			String configName,
+			OpenPoolLedgerJSONParameter config) throws SovrinException {
+
+		final CompletableFuture<OpenPoolLedgerResult> future = new CompletableFuture<> ();
+
+		Callback cb = new Callback() {
+
+			@SuppressWarnings("unused")
+			public void callback(int xcommand_handle, int err, int pool_handle) {
+
+				if (! checkCallback(future, xcommand_handle, err)) return;
+
+				Ledger ledger = new Ledger(pool_handle);
+
+				OpenPoolLedgerResult result = new OpenPoolLedgerResult(ledger);
+				future.complete(result);
+			}
+		};
+
+		int result = LibSovrin.api.sovrin_open_pool_ledger(
+				FIXED_COMMAND_HANDLE, 
+				configName, 
+				config == null ? null : config.toJson(), 
+				cb);
+
+		checkResult(result);
+
+		return future;
+	}
+	
+	public Ledger openPoolLedger(
+			String configName,
+			OpenPoolLedgerJSONParameter config) throws InterruptedException, ExecutionException, SovrinException{
+		OpenPoolLedgerResult result = openPoolLedgerAsync(configName, config).get();
+		return result.getLedger();
+	}
+
+	private static Future<RefreshPoolLedgerResult> refreshPoolLedger(
+			Ledger ledger) throws SovrinException {
+
+		final CompletableFuture<RefreshPoolLedgerResult> future = new CompletableFuture<> ();
+
+		Callback cb = new Callback() {
+
+			@SuppressWarnings("unused")
+			public void callback(int xcommand_handle, int err) {
+
+				if (! checkCallback(future, xcommand_handle, err)) return;
+
+				RefreshPoolLedgerResult result = new RefreshPoolLedgerResult();
+				future.complete(result);
+			}
+		};
+
+		int handle = ledger.getPoolHandle();
+
+		int result = LibSovrin.api.sovrin_refresh_pool_ledger(
+				FIXED_COMMAND_HANDLE, 
+				handle, 
+				cb);
+
+		checkResult(result);
+
+		return future;
+	}
+
+	private static Future<ClosePoolLedgerResult> closePoolLedger(
+			Ledger ledger) throws SovrinException {
+
+		final CompletableFuture<ClosePoolLedgerResult> future = new CompletableFuture<> ();
+
+		Callback cb = new Callback() {
+
+			@SuppressWarnings("unused")
+			public void callback(int xcommand_handle, int err) {
+
+				if (! checkCallback(future, xcommand_handle, err)) return;
+
+				ClosePoolLedgerResult result = new ClosePoolLedgerResult();
+				future.complete(result);
+			}
+		};
+
+		int handle = ledger.getPoolHandle();
+
+		int result = LibSovrin.api.sovrin_refresh_pool_ledger(
+				FIXED_COMMAND_HANDLE, 
+				handle, 
+				cb);
+
+		checkResult(result);
+
+		return future;
+	}
+
+	
+	/*
+	 * INSTANCE METHODS
+	 */
+
+	public Future<RefreshPoolLedgerResult> refreshAsync(
+			) throws SovrinException {
+
+		return refreshPoolLedger(this);
+	}
+	
+	public void refresh() throws InterruptedException, ExecutionException, SovrinException{
+		refreshAsync().get();
+	}
+
+	public Future<ClosePoolLedgerResult> closeAsync(
+			) throws SovrinException {
+
+		return closePoolLedger(this);
+	}
+	
+	public void close() throws InterruptedException, ExecutionException, SovrinException{
+		closeAsync().get();
+	}
+	
+	public Future<SignAndSubmitRequestResult> signAndSubmitRequestAsync(
+			Wallet wallet,
+			String submitterDid,
+			String requestJson) throws SovrinException{
+		return signAndSubmitRequest(this, wallet, submitterDid, requestJson);
+	}
+	
+	public String signAndSubmitRequest(
+			Wallet wallet,
+			String submitterDid,
+			String requestJson) throws InterruptedException, ExecutionException, SovrinException {
+		SignAndSubmitRequestResult result = signAndSubmitRequestAsync(wallet, submitterDid, requestJson).get();
+		return result.getRequestResultJson();
+	}
+	
+	public Future<SubmitRequestResult> submitRequestAsync(
+			String requestJson) throws SovrinException{
+		return submitRequest(this, requestJson);
+	}
+	
+	public String submitRequest(
+			String requestJson) throws InterruptedException, ExecutionException, SovrinException {
+		SubmitRequestResult result = submitRequestAsync(requestJson).get();
+		return result.getRequestResultJson();
 	}
 }

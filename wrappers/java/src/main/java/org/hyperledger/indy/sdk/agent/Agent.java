@@ -1,6 +1,7 @@
 package org.hyperledger.indy.sdk.agent;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import org.hyperledger.indy.sdk.LibSovrin;
@@ -13,7 +14,7 @@ import org.hyperledger.indy.sdk.agent.AgentResults.AgentConnectResult;
 import org.hyperledger.indy.sdk.agent.AgentResults.AgentListenResult;
 import org.hyperledger.indy.sdk.agent.AgentResults.AgentRemoveIdentityResult;
 import org.hyperledger.indy.sdk.agent.AgentResults.AgentSendResult;
-import org.hyperledger.indy.sdk.pool.Pool;
+import org.hyperledger.indy.sdk.ledger.Ledger;
 import org.hyperledger.indy.sdk.wallet.Wallet;
 
 import com.sun.jna.Callback;
@@ -31,8 +32,8 @@ public class Agent extends SovrinJava.API {
 	 * STATIC METHODS
 	 */
 
-	public static Future<AgentConnectResult> agentConnect(
-			Pool pool,
+	public static Future<AgentConnectResult> createConnectionAsync(
+			Ledger ledger,
 			Wallet wallet,
 			String senderDid,
 			String receiverDid,
@@ -54,7 +55,7 @@ public class Agent extends SovrinJava.API {
 			}
 		};
 
-		int poolHandle = pool.getPoolHandle();
+		int poolHandle = ledger.getPoolHandle();
 		int walletHandle = wallet.getWalletHandle();
 
 		int result = LibSovrin.api.sovrin_agent_connect(
@@ -70,8 +71,17 @@ public class Agent extends SovrinJava.API {
 
 		return future;
 	}
+	
+	public Agent.Connection createConnection(Ledger ledger,
+			Wallet wallet,
+			String senderDid,
+			String receiverDid,
+			Callback messageCb) throws InterruptedException, ExecutionException, SovrinException{
+		AgentConnectResult result = createConnectionAsync(ledger, wallet, senderDid, receiverDid, messageCb).get();
+		return result.getConnection();		
+	}
 
-	public static Future<AgentListenResult> agentListen(
+	public static Future<AgentListenResult> createListenerAsync(
 			String endpoint,
 			Callback connectionCb,
 			Callback messageCb) throws SovrinException {
@@ -103,10 +113,18 @@ public class Agent extends SovrinJava.API {
 
 		return future;
 	}
+	
+	public Agent.Listener createListener(
+			String endpoint,
+			Callback connectionCb,
+			Callback messageCb) throws InterruptedException, ExecutionException, SovrinException{
+		AgentListenResult result = createListenerAsync(endpoint, connectionCb, messageCb).get();
+		return result.getListener();
+	}
 
-	public static Future<AgentAddIdentityResult> agentAddIdentity(
+	private static Future<AgentAddIdentityResult> agentAddIdentity(
 			Agent.Listener listener,
-			Pool pool,
+			Ledger ledger,
 			Wallet wallet,
 			String did,
 			Callback connectionCb,
@@ -127,7 +145,7 @@ public class Agent extends SovrinJava.API {
 		};
 
 		int listenerHandle = listener.getListenerHandle();
-		int poolHandle = pool.getPoolHandle();
+		int poolHandle = ledger.getPoolHandle();
 		int walletHandle = wallet.getWalletHandle();
 
 		int result = LibSovrin.api.sovrin_agent_add_identity(
@@ -143,7 +161,7 @@ public class Agent extends SovrinJava.API {
 		return future;
 	}
 
-	public static Future<AgentRemoveIdentityResult> agentRemoveIdentity(
+	private static Future<AgentRemoveIdentityResult> agentRemoveIdentity(
 			Agent.Listener listener,
 			Wallet wallet,
 			String did,
@@ -179,7 +197,7 @@ public class Agent extends SovrinJava.API {
 		return future;
 	}
 
-	public static Future<AgentSendResult> agentSend(
+	private static Future<AgentSendResult> agentSend(
 			Agent.Connection connection,
 			String message) throws SovrinException {
 
@@ -210,7 +228,7 @@ public class Agent extends SovrinJava.API {
 		return future;
 	}
 
-	public static Future<AgentCloseConnectionResult> agentCloseConnection(
+	private static Future<AgentCloseConnectionResult> agentCloseConnection(
 			Agent.Connection connection) throws SovrinException {
 
 		final CompletableFuture<AgentCloseConnectionResult> future = new CompletableFuture<> ();
@@ -239,7 +257,7 @@ public class Agent extends SovrinJava.API {
 		return future;
 	}
 
-	public static Future<AgentCloseListenerResult> agentCloseListener(
+	private static Future<AgentCloseListenerResult> agentCloseListener(
 			Agent.Listener listener) throws SovrinException {
 
 		final CompletableFuture<AgentCloseListenerResult> future = new CompletableFuture<> ();
@@ -286,14 +304,22 @@ public class Agent extends SovrinJava.API {
 			return this.connectionHandle;
 		}
 
-		public Future<AgentSendResult> agentSend(String message) throws SovrinException {
+		public Future<AgentSendResult> sendMessageAsync(String message) throws SovrinException {
 
 			return Agent.agentSend(this, message);
 		}
+		
+		public void sendMessage(String message) throws InterruptedException, ExecutionException, SovrinException{
+			sendMessageAsync(message).get();
+		}
 
-		public Future<AgentCloseConnectionResult> agentCloseConnection() throws SovrinException {
+		public Future<AgentCloseConnectionResult> closeAsync() throws SovrinException {
 
 			return Agent.agentCloseConnection(this);
+		}
+		
+		public void close() throws InterruptedException, ExecutionException, SovrinException{
+			closeAsync().get();
 		}
 	}
 
@@ -311,19 +337,31 @@ public class Agent extends SovrinJava.API {
 			return this.listenerHandle;
 		}
 
-		public Future<AgentAddIdentityResult> agentAddIdentity(Pool pool, Wallet wallet, String did, Callback connectionCb, Callback messageCb) throws SovrinException {
+		public Future<AgentAddIdentityResult> addIdentityAsync(Ledger ledger, Wallet wallet, String did, Callback connectionCb, Callback messageCb) throws SovrinException {
 
-			return Agent.agentAddIdentity(this, pool, wallet, did, connectionCb, messageCb);
+			return Agent.agentAddIdentity(this, ledger, wallet, did, connectionCb, messageCb);
+		}
+		
+		public void addIdentity(Ledger ledger, Wallet wallet, String did, Callback connectionCb, Callback messageCb) throws InterruptedException, ExecutionException, SovrinException{
+			addIdentityAsync(ledger, wallet, did, connectionCb, messageCb).get();
 		}
 
-		public Future<AgentRemoveIdentityResult> agentRemoveIdentity(Wallet wallet, String did, Callback connectionCb, Callback messageCb) throws SovrinException {
+		public Future<AgentRemoveIdentityResult> removeIdentityAsync(Wallet wallet, String did, Callback connectionCb, Callback messageCb) throws SovrinException {
 
 			return Agent.agentRemoveIdentity(this, wallet, did, connectionCb, messageCb);
 		}
+		
+		public void removeIdentity(Wallet wallet, String did, Callback connectionCb, Callback messageCb) throws SovrinException, InterruptedException, ExecutionException {
+			removeIdentityAsync(wallet, did, connectionCb, messageCb).get();
+		}
 
-		public Future<AgentCloseListenerResult> agentCloseListener() throws SovrinException {
+		public Future<AgentCloseListenerResult> closeAsync() throws SovrinException {
 
 			return Agent.agentCloseListener(this);
+		}
+		
+		public void close() throws InterruptedException, ExecutionException, SovrinException{
+			closeAsync().get();
 		}
 	}
 }

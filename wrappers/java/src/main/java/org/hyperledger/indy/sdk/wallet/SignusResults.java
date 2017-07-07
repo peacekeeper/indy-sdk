@@ -1,4 +1,4 @@
-package org.hyperledger.indy.sdk.signus;
+package org.hyperledger.indy.sdk.wallet;
 
 import org.hyperledger.indy.sdk.SovrinJava;
 

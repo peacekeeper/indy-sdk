@@ -1,4 +1,4 @@
-package org.hyperledger.indy.sdk.pool;
+package org.hyperledger.indy.sdk.ledger;
 
 import org.hyperledger.indy.sdk.SovrinJava;
 
@@ -18,9 +18,9 @@ public final class PoolResults {
 
 	public static class OpenPoolLedgerResult extends SovrinJava.Result {
 
-		private Pool pool;
-		OpenPoolLedgerResult(Pool pool) { this.pool = pool; }
-		public Pool getPool() { return this.pool; }
+		private Ledger ledger;
+		OpenPoolLedgerResult(Ledger ledger) { this.ledger = ledger; }
+		public Ledger getLedger() { return this.ledger; }
 	}
 
 	public static class RefreshPoolLedgerResult extends SovrinJava.Result {
