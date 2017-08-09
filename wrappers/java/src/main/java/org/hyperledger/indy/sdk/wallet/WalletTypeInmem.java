@@ -68,8 +68,7 @@ public class WalletTypeInmem extends WalletType {
 		WalletInmem wallet = this.walletsByHandle.get(handle);
 		if (wallet == null) return ErrorCode.CommonInvalidState;
 
-		if(!wallet.values.containsKey(key))
-			return ErrorCode.WalletNotFoundError;
+		if (! wallet.values.containsKey(key)) return ErrorCode.WalletNotFoundError;
 
 		String value = wallet.values.get(key);
 
@@ -86,8 +85,7 @@ public class WalletTypeInmem extends WalletType {
 		WalletInmem wallet = this.walletsByHandle.get(handle);
 		if (wallet == null) return ErrorCode.CommonInvalidState;
 
-		if(!wallet.values.containsKey(key))
-			return ErrorCode.WalletNotFoundError;
+		if(! wallet.values.containsKey(key)) return ErrorCode.WalletNotFoundError;
 
 		String value = wallet.values.get(key);
 
