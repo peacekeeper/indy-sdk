@@ -15,13 +15,15 @@ import com.sun.jna.Callback;
 /**
  * High level wrapper around SDK Pool functionality.
  */
-public class Pool extends IndyJava.API {
+public class Pool extends IndyJava.API implements AutoCloseable {
 
-	private final int poolHandle;
+	private int poolHandle;
+	private boolean closed;
 
 	private Pool(int poolHandle) {
 
 		this.poolHandle = poolHandle;
+		this.closed = false;
 	}
 
 	/**
@@ -32,6 +34,23 @@ public class Pool extends IndyJava.API {
 	public int getPoolHandle() {
 
 		return this.poolHandle;
+	}
+
+	public synchronized boolean isClosed() {
+
+		return this.closed;
+	}
+
+	@Override
+	public synchronized void close() throws Exception {
+
+		if (! this.isClosed()) this.closePoolLedger().get();
+	}
+
+	@Override
+	protected synchronized void finalize() throws Throwable {
+
+		if (! this.isClosed()) this.closePoolLedger();
 	}
 
 	/*
@@ -208,22 +227,27 @@ public class Pool extends IndyJava.API {
 	 * @return A future that does not resolve a value.
 	 * @throws IndyException Thrown if an error occurs when calling the underlying SDK.
 	 */
-	private static CompletableFuture<Void> closePoolLedger(
+	public static CompletableFuture<Void> closePoolLedger(
 			Pool pool) throws IndyException {
 
-		CompletableFuture<Void> future = new CompletableFuture<Void>();
-		int commandHandle = addFuture(future);
+		synchronized(pool) {
 
-		int handle = pool.getPoolHandle();
+			CompletableFuture<Void> future = new CompletableFuture<Void>();
+			int commandHandle = addFuture(future);
 
-		int result = LibIndy.api.indy_close_pool_ledger(
-				commandHandle, 
-				handle, 
-				closePoolLedgerCb);
+			int handle = pool.getPoolHandle();
 
-		checkResult(result);
+			pool.closed = true;
 
-		return future;
+			int result = LibIndy.api.indy_close_pool_ledger(
+					commandHandle,
+					handle,
+					closePoolLedgerCb);
+
+			checkResult(result);
+
+			return future;
+		}
 	}
 
 	/**

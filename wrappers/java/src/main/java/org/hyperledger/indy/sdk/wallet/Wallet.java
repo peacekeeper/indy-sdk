@@ -17,13 +17,15 @@ import com.sun.jna.Callback;
 /**
  * High level wrapper for wallet SDK functions.
  */
-public class Wallet extends IndyJava.API {
+public class Wallet extends IndyJava.API implements AutoCloseable {
 
-	private final int walletHandle;
+	private int walletHandle;
+	private boolean closed;
 
 	private Wallet(int walletHandle) {
 
 		this.walletHandle = walletHandle;
+		this.closed = false;
 	}
 
 	/**
@@ -34,6 +36,23 @@ public class Wallet extends IndyJava.API {
 	public int getWalletHandle() {
 
 		return this.walletHandle;
+	}
+
+	public synchronized boolean isClosed() {
+
+		return this.closed;
+	}
+
+	@Override
+	public synchronized void close() throws Exception {
+
+		if (! this.isClosed()) this.closeWallet().get();
+	}
+
+	@Override
+	protected synchronized void finalize() throws Throwable {
+
+		if (! this.isClosed()) this.closeWallet();
 	}
 
 	/*
@@ -236,22 +255,27 @@ public class Wallet extends IndyJava.API {
 	 * @return A future that resolves no value.
 	 * @throws IndyException Thrown if a call to the underlying SDK fails.
 	 */
-	private static CompletableFuture<Void> closeWallet(
+	public static CompletableFuture<Void> closeWallet(
 			Wallet wallet) throws IndyException {
 
-		CompletableFuture<Void> future = new CompletableFuture<Void>();
-		int commandHandle = addFuture(future);
+		synchronized(wallet) {
 
-		int handle = wallet.getWalletHandle();
+			CompletableFuture<Void> future = new CompletableFuture<Void>();
+			int commandHandle = addFuture(future);
 
-		int result = LibIndy.api.indy_close_wallet(
-				commandHandle, 
-				handle, 
-				closeWalletCb);
+			int handle = wallet.getWalletHandle();
 
-		checkResult(result);
+			wallet.closed = true;
 
-		return future;
+			int result = LibIndy.api.indy_close_wallet(
+					commandHandle,
+					handle,
+					closeWalletCb);
+
+			checkResult(result);
+
+			return future;
+		}
 	}
 
 	/**

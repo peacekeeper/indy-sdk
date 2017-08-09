@@ -445,21 +445,25 @@ public class Agent extends IndyJava.API {
 	public static CompletableFuture<Void> agentCloseConnection(
 			Agent.Connection connection) throws IndyException {
 
-		CompletableFuture<Void> future = new CompletableFuture<Void>();
-		int commandHandle = addFuture(future);
+		synchronized(connection) {
 
-		int connectionHandle = connection.getConnectionHandle();
+			CompletableFuture<Void> future = new CompletableFuture<Void>();
+			int commandHandle = addFuture(future);
 
-		connections.remove(connectionHandle);
+			int connectionHandle = connection.getConnectionHandle();
 
-		int result = LibIndy.api.indy_agent_close_connection(
-				commandHandle,
-				connectionHandle,
-				agentCloseConnectionCb);
+			connections.remove(connectionHandle);
+			connection.closed = true;
 
-		checkResult(result);
+			int result = LibIndy.api.indy_agent_close_connection(
+					commandHandle,
+					connectionHandle,
+					agentCloseConnectionCb);
 
-		return future;
+			checkResult(result);
+
+			return future;
+		}
 	}
 
 	/**
@@ -472,21 +476,25 @@ public class Agent extends IndyJava.API {
 	public static CompletableFuture<Void> agentCloseListener(
 			Agent.Listener listener) throws IndyException {
 
-		CompletableFuture<Void> future = new CompletableFuture<Void>();
-		int commandHandle = addFuture(future);
+		synchronized(listener) {
 
-		int listenerHandle = listener.getListenerHandle();
+			CompletableFuture<Void> future = new CompletableFuture<Void>();
+			int commandHandle = addFuture(future);
 
-		listeners.remove(listenerHandle);
+			int listenerHandle = listener.getListenerHandle();
 
-		int result = LibIndy.api.indy_agent_close_listener(
-				commandHandle,
-				listenerHandle,
-				agentCloseListenerCb);
+			listeners.remove(listenerHandle);
+			listener.closed = true;
 
-		checkResult(result);
+			int result = LibIndy.api.indy_agent_close_listener(
+					commandHandle,
+					listenerHandle,
+					agentCloseListenerCb);
 
-		return future;
+			checkResult(result);
+
+			return future;
+		}
 	}
 
 	/*
@@ -496,14 +504,16 @@ public class Agent extends IndyJava.API {
 	/**
 	 * Listens for incoming connections.
 	 */
-	public static class Listener {
+	public static class Listener implements AutoCloseable {
 
-		private final int listenerHandle;
+		private int listenerHandle;
+		private boolean closed;
 		private AgentObservers.ConnectionObserver connectionObserver;
 
 		private Listener(int listenerHandle) {
 
 			this.listenerHandle = listenerHandle;
+			this.closed = false;
 		}
 
 		/**
@@ -515,6 +525,27 @@ public class Agent extends IndyJava.API {
 
 			return this.listenerHandle;
 		}
+
+		public synchronized boolean isClosed() {
+
+			return this.closed;
+		}
+
+		@Override
+		public synchronized void close() throws Exception {
+
+			if (! this.isClosed()) this.agentCloseListener().get();
+		}
+
+		@Override
+		protected synchronized void finalize() throws Throwable {
+
+			if (! this.isClosed()) this.agentCloseListener();
+		}
+
+		/*
+		 * INSTANCE METHODS
+		 */
 
 		/**
 		 * Adds an identity to the listener.
@@ -558,14 +589,16 @@ public class Agent extends IndyJava.API {
 	/**
 	 * A connection between two agents.
 	 */
-	public static class Connection {
+	public static class Connection implements AutoCloseable {
 
-		private final int connectionHandle;
+		private int connectionHandle;
+		private boolean closed;
 		private AgentObservers.MessageObserver messageObserver;
 
 		private Connection(int connectionHandle) {
 
 			this.connectionHandle = connectionHandle;
+			this.closed = false;
 		}
 
 		/**
@@ -577,6 +610,27 @@ public class Agent extends IndyJava.API {
 
 			return this.connectionHandle;
 		}
+
+		public synchronized boolean isClosed() {
+
+			return this.closed;
+		}
+
+		@Override
+		public synchronized void close() throws Exception {
+
+			if (! this.isClosed()) this.agentCloseConnection().get();
+		}
+
+		@Override
+		protected synchronized void finalize() throws Throwable {
+
+			if (! this.isClosed()) this.agentCloseConnection();
+		}
+
+		/*
+		 * INSTANCE METHODS
+		 */
 
 		/**
 		 * Sends a message on the connection.
