@@ -17,7 +17,7 @@
    
    ```
    git checkout https://github.com/hyperledger/indy-sdk.git
-   cd ./indy-sdk
+   cd ./indy-sdk/libindy
    cargo build
    ```
 1. Run integration tests:
