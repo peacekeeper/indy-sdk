@@ -4,7 +4,9 @@ import org.hyperledger.indy.sdk.ErrorCode;
 import org.hyperledger.indy.sdk.ErrorCodeMatcher;
 import org.hyperledger.indy.sdk.IndyIntegrationTest;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -56,5 +58,24 @@ public class CloseWalletTest extends IndyIntegrationTest {
 		Wallet.openWallet(walletName, null, null).get();
 
 		WalletTypeInmem.getInstance().clear();
+	}
+
+	@Test
+	public void testCloseWalletWorksForAutoCloseable() throws Exception {
+
+		String walletName = "closeWalletWorksForAutoCloseable";
+
+		Wallet.createWallet("default", walletName, "default", null, null).get();
+
+		Wallet wallet = null;
+
+		try (Wallet closedWallet = Wallet.openWallet(walletName, null, null).get()) {
+
+			wallet = closedWallet;
+			assertFalse(wallet.isClosed());
+			throw new Exception();
+		} catch (Exception e) { }
+
+		assertTrue(wallet.isClosed());
 	}
 }
