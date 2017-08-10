@@ -4,6 +4,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.lang.ref.WeakReference;
+
 import org.hyperledger.indy.sdk.ErrorCode;
 import org.hyperledger.indy.sdk.ErrorCodeMatcher;
 import org.hyperledger.indy.sdk.IndyException;
@@ -63,5 +65,17 @@ public class ClosePoolTest extends IndyIntegrationTest {
 		} catch (Exception e) { if (e instanceof IndyException) throw e; }
 
 		assertTrue(pool.isClosed());
+	}
+
+	@Test
+	public void testClosePoolWorksForFinalize() throws Exception {
+		String poolName = PoolUtils.createPoolLedgerConfig();
+
+		Pool pool = Pool.openPoolLedger(poolName, null).get();
+		WeakReference<Pool> reference = new WeakReference<Pool> (pool);
+		pool = null;
+		System.gc();
+
+		assertTrue(reference.get() == null);
 	}
 }

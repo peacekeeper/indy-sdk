@@ -11,6 +11,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import java.lang.ref.WeakReference;
 import java.util.concurrent.ExecutionException;
 
 
@@ -78,5 +79,20 @@ public class CloseWalletTest extends IndyIntegrationTest {
 		} catch (Exception e) { if (e instanceof IndyException) throw e; }
 
 		assertTrue(wallet.isClosed());
+	}
+
+	@Test
+	public void testCloseWalletWorksForFinalize() throws Exception {
+
+		String walletName = "closeWalletWorksForFinalize";
+
+		Wallet.createWallet("default", walletName, "default", null, null).get();
+
+		Wallet wallet = Wallet.openWallet(walletName, null, null).get();
+		WeakReference<Wallet> reference = new WeakReference<Wallet> (wallet);
+		wallet = null;
+		System.gc();
+
+		assertTrue(reference.get() == null);
 	}
 }
